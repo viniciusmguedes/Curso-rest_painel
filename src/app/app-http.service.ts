@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Http, Headers } from '@angular/http';
-import { environment } from '../environments/environment'
+import { environment } from '../environments/environment';
+import { Router } from '@angular/router';
 
 import 'rxjs/add/operator/toPromise';
 
@@ -9,27 +10,99 @@ export class AppHttpService {
     protected url: string;
     protected header: Headers;
 
-    constructor (protected http: Http){
+    constructor (protected http: Http, private router: Router) {
         this.setAccessToken();
     }
-    getUser(){
-        return this.builder('auth/me')
-            .list();
+
+    request() {
+        return this.http;
     }
 
-    setAccessToken() {
-        let token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjJlNjZkNzY5MTJkZjYzYTliMzQ3YWY2NzE5OTVmMDJlZTdiMWQ3YjU0YTEwOGE5ODk1NjRjMGQ0NWY2MzgzMDc1YTU5ZmJjYzJhODUzNGMzIn0.eyJhdWQiOiIzIiwianRpIjoiMmU2NmQ3NjkxMmRmNjNhOWIzNDdhZjY3MTk5NWYwMmVlN2IxZDdiNTRhMTA4YTk4OTU2NGMwZDQ1ZjYzODMwNzVhNTlmYmNjMmE4NTM0YzMiLCJpYXQiOjE1MDg3NjQxNTMsIm5iZiI6MTUwODc2NDE1MywiZXhwIjoxNTQwMzAwMTUyLCJzdWIiOiIxIiwic2NvcGVzIjpbXX0.jvUBhyzQ0t9NTvaHXG1u1LuM_90qhb5b4ZF4ePoCawa1uqzFA2gCo7jmjRCBNvtwHwwha6EYSxdpQasAkKRdOl2yXCF9N7plgsrI0ZiJHn6wL8zhu7YFib6wwIHSUTirppdo5290-5Z7A3rjGLPAkoWzPFGOulCO3SHyKlj6NtJh2VomYsc59xfcrog_Oq_simH1QqfDj2UGjp3NSWxtpaS9KqqFXjKAGAXYY9HOpiYA1VZn5RKp7FBF5u_Cmc0gQY9mCjMCfaWRvF3CWcweq6SSHLDfuPSGRbddVGMH5wsjh4XbjT845h5fdQkRJwS-6V70rJ1-tSF1KZoejbD1fUSx9UJvfGvsglGjy3nupNxPBS7_0WvN8i24vfOC4nYuV6b90GmtMoRQAGGlBiyigBrgKnIlPf1KycJ74vY0V3VI7m0c_wmJDxACBXvurlRRt9xL-LDAwgCD6T9WZCzjQcdMlHZJuw-OMk0ikKEzpd75SeLXSnK_AbBANo1ry7y_KzvenorEbE_pIJ5gZXKv5dx7Vswts64r7gUW6fg4Nrti1m1iOqi338kGR3rQSL65xONc3ijqqdFsTfS7yjSb2WB4i1DFUs-AUoZf_VsYLbMm2mNiFCebEzNDYBuqc6L-NhM1dD2Zp_nT0GF0o50cS5FO3Fi413w-qrCITFb5848';
-        this.header = new Headers({'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'});
+    setAccessToken () {
+        let token = this.getCookie('token');
+        this.header = new Headers({'Authorization': 'Bearer ' + token, 'Accept': 'application/json'});
     }
-    builder (resource: string){
+
+    builder (resource: string) {
         this.url = environment.server_url + '/api/v1/' + resource;
         return this;
     }
-    list (options: Object = {}) {
-               return this.http.get(this.url, {headers: this.header})
-                   .toPromise()
-                   .then((res) => {
-                           return res.json() || {};
-                      });
-          }
+
+    list (options: any = {}) {
+        let url = this.url;
+
+        if (options.filters !== undefined) {
+            let filters = options.filters;
+            filters.forEach((item, index) => {
+                let field = Object.keys(item)[0];
+                let value = item[field];
+                url = url + '?where[' + field + ']=' + value;
+            });
+        }
+
+        let observable = this.http.get(url, {headers: this.header})
+        return this.toPromise(observable);
+    }
+
+    view (id: number) {
+        let observable = this.http.get(this.url + '/' + id, {headers: this.header})
+        return this.toPromise(observable);
+    }
+
+    update(id: number, data: object) {
+        let observable = this.http.put(this.url + '/' + id, data, {headers: this.header})
+        return this.toPromise(observable);
+    }
+
+    insert (data: Object) {
+        let observable = this.http.post(this.url, data, {headers: this.header})
+        return this.toPromise(observable);
+    }
+
+    delete (id: number) {
+        let observable = this.http.delete(this.url + '/' + id, {headers: this.header});
+        return this.toPromise(observable);
+    }
+
+    protected toPromise(request) {
+        return request.toPromise()
+            .then((res) => {
+                return res.json() || {}
+            })
+            .catch((err) => {
+                let message = 'Algo deu errado no servidor, informe o erro ' + err.status + ' ao administrador';
+                if (err.status === 401) {
+                    message = 'Você não tem permissão para ver isso, informe um usuário e senha válidos';
+                    this.router.navigate(['/login']);
+                }
+
+                if (err.status === 422) {
+                    message = 'Falha de validação, verifique os campos';
+                }
+
+                if (err.status === 404) {
+                    message = 'Impossível se conectar ao servidor, verifique sua conexão ou tente novamente em alguns minutos';
+                }
+
+                window.Materialize.toast(message, 3000, 'red');
+            });
+    }
+
+    private getCookie(name: string) {
+        let cookies = document.cookie;
+        if (!cookies) {
+            return null;
+        }
+
+        let cookiesCollection: string[] = cookies.split(';');
+        for(let i= 0; i < cookiesCollection.length; i++) {
+            let cookieCurrent = cookiesCollection[i].split('=');
+
+            if (cookieCurrent[0].trim() === name) {
+                return cookieCurrent[1] || null;
+            }
+        }
+
+        return null;
+    }
 }

@@ -2,34 +2,34 @@
     <div class="modal-content">
         <h4><i class="material-icons">keyboard_arrow_right</i>Nova oferta<small class="grey-text">Adicione o produto</small></h4>
 
-        <form class="row">
-            <div class="input-field col s12">
-                <input id="name" type="text">
-                <label for="name">Nome do prato</label>
-            </div>
+        <form class="row" (submit) ="save($event)">
 
             <div class="file-field input-field">
                 <div class="btn">
                     <span>Foto</span>
-                    <input type="file">
+                    <input type="file" (change)="addFile($event)">
                 </div>
                 <div class="file-path-wrapper">
                     <input class="file-path validate" type="text">
                 </div>
             </div>
+            <div class="input-field col s12">
+                <input id="name" type="text" name="name" [(ngModel)]="product.name" placeholder="Nome do produto">
+                <label for="name">Nome do prato</label>
+            </div>
 
             <div class="input-field col s12">
-                <textarea id="description" class="materialize-textarea"></textarea>
+                <textarea id="description" name="description" [(ngModel)]="product.description" class="materialize-textarea" placeholder="Descrição"></textarea>
                 <label for="description">Descrição</label>
             </div>
 
             <div class="input-field col s12">
-                <input id="price" type="text">
+                <input id="price" name="price" [(ngModel)]="product.price" type="text" placeholder="Preço do produto">
                 <label for="price">Valor</label>
             </div>
 
             <div class="input-field col s12">
-                <input type="button" value="Salvar" class="btn">
+                <input type="submit" value="Salvar" class="btn">
             </div>
         </form>
     </div>

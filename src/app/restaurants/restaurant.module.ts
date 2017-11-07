@@ -1,16 +1,18 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Routes} from '@angular/router';
-import { DashboardComponent } from './dashboard.component';
-import { EvaluationComponent } from './dashboard/evaluation.component';
+import { FormsModule } from '@angular/forms'
+import { DashboardComponent } from './components/dashboard.component';
+import { EvaluationComponent } from './components/dashboard/evaluation.component';
 
-import { ProductsComponent } from './products.component';
-import { NewProductComponent } from './products/new-product.component';
-import { EditProductComponent } from './products/edit-product.component';
+import { ProductsComponent } from './components/products.component';
+import { NewProductComponent } from './components/products/new-product.component';
+import { EditProductComponent } from './components/products/edit-product.component';
 
-import { EditComponent } from './edit.component';
-import { PasswordComponent } from './password.component';
-import { ProfileComponent } from './profile.component';
+import { EditComponent } from './components/edit.component';
+
+import { RestaurantService } from './services/restaurant.service';
+import { ProductsService } from './services/products.service';
 
 const appRoutes: Routes = [
     {path: 'dashboard', component: DashboardComponent,
@@ -24,14 +26,13 @@ const appRoutes: Routes = [
             {path: 'edit/:id', component: EditProductComponent}
         ]
     },
-    { path: 'edit', component: EditComponent},
-    { path: 'password', component: PasswordComponent},
-    { path: 'profile', component: ProfileComponent},
+    { path: 'edit', component: EditComponent}
 
 ]
 @NgModule({
     imports: [
         CommonModule,
+        FormsModule,
         RouterModule.forRoot(appRoutes)
     ],
     declarations: [
@@ -41,8 +42,10 @@ const appRoutes: Routes = [
         EditComponent,
         EditProductComponent,
         NewProductComponent,
-        PasswordComponent,
-        ProfileComponent,
+    ],
+    providers: [
+        RestaurantService,
+        ProductsService
     ]
 })
 export class RestaurantsModule {}

@@ -5,7 +5,7 @@ import Toast from 'materialize-css';
 
 @Component({
     selector: 'app-evaluation',
-    templateUrl: './evaluation.component.html'
+    templateUrl: 'evaluation.component.html'
 })
 export class EvaluationComponent implements OnInit{
     constructor(private router:Router){}
